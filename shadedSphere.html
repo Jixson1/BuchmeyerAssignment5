@@ -1,6 +1,6 @@
-<!-- name: 
-     date: today's date
-    proposed points: number of points (out of 12) that you are proposing your project is worth 
+<!-- name: Jackson Buchmeyer
+     date: March 15th, 2021
+    proposed points: My project is worth 10/12 points because I did everything but the last 2 questions.
 -->
 
 <!DOCTYPE html>
@@ -58,7 +58,12 @@
             // define a new vector H
             // use the uShininess as a variable
 
-        
+            float diffuseAngle = max(dot(L,N), 0.0);
+            diffuse = uDiffuseProduct * diffuseAngle;
+
+            vec3 H = normalize(L + V);
+            float specularAngle = pow(max(dot(N,H), 0.0), uShininess);
+            specular = uSpecularProduct * specularAngle;
         
             // this code below here is good... (don't touch)
             gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
@@ -82,6 +87,87 @@
         
             fColor = vColor;
         
+        }
+</script>
+
+<script id="vertex-shader-phong" type="x-shader/x-vertex">
+    #version 300 es
+
+    // input attributes 
+    in vec4 aPosition;
+    in vec4 aNormal;
+    
+    //output values -- these will be INTERPOLATED in the fragment shader!
+    out vec4 vColor;
+    out vec3 N, L, V;
+    
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+    uniform vec4 uLightPosition;
+            
+    void
+    main()
+    {
+        // pos is vertex position in camera coordinates (before projection)
+        vec3 pos = (uModelViewMatrix * aPosition).xyz;
+    
+        // check for directional light
+        if(uLightPosition.w == 0.0) L = normalize(uLightPosition.xyz);
+        else L = normalize(uLightPosition.xyz - pos);
+     
+        // the vector from the vertex position to the eye is -- the View vector   	
+        V = -normalize( pos );
+      
+        // Transform vertex normal into eye coordinates
+        N = normalize( mat3(uModelViewMatrix)*aNormal.xyz);
+           
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+    }
+    </script>
+    
+<script id="fragment-shader-phong" type="x-shader/x-fragment">
+        #version 300 es
+        
+        precision mediump float;
+
+        // input values --- WHAT VECTORS ARE BEING PASSED IN FROM THE VERTEX SHADER??
+        in vec3 N, L, V;
+
+        // output color
+        out vec4 fColor;
+
+        // uniform variables
+        uniform vec4 uAmbientProduct, uDiffuseProduct, uSpecularProduct;
+        uniform float uShininess;
+
+        void
+        main()
+        {
+            vec4 ambient = uAmbientProduct;
+            vec4 diffuse  = vec4(0.0, 0.0, 0.0, 1.0);
+            vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
+ 
+            /*implement diffuse and specular lighting here*/
+            /* need to set
+            diffuse = ...
+            specular = ...
+            */
+
+            // the values for the lighting term * material terms are already available via
+            // uDiffuseProduct and uSpecularProduct
+
+            // use the vectors (L, N) in the diffuse term
+            // define a new vector H
+            // use the uShininess as a variable
+
+            float diffuseAngle = max(dot(L,N), 0.0);
+            diffuse = uDiffuseProduct * diffuseAngle;
+
+            vec3 H = normalize(L + V);
+            float specularAngle = pow(max(dot(N,H), 0.0), uShininess);
+            specular = uSpecularProduct * specularAngle;
+            
+            fColor = ambient + diffuse + specular;
         }
 </script>
 
